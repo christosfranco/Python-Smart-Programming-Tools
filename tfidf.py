@@ -7,8 +7,10 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.svm import LinearSVC
 from sklearn.pipeline import Pipeline
 
+#number of articles used in total from dataset
 ARTICLE_COUNT = 1000
 
+#TEST
 test_text = """
 The failures of the intelligence community before the Iraq war the gullibility of much of the western media
 as well as the cynical manipulation of both by the political class of the day, provide us with a stark reminder 
@@ -16,6 +18,8 @@ of what can go radically wrong On 8 September 2002 the New York Times published 
 """
 
 test_label = 10
+#TEST
+
 
 def create_connection():
     # Establishing the connection
@@ -67,15 +71,22 @@ def type_mapping(type_id):
     fake = [0,1,4,5,6,7,9,10,11]
     return int(type_id in fake)
 
-article_content = [i[0] for i in results]
-article_label = [type_mapping(i[1]) for i in results]
+#Split the dataset into train and test here
+
+
+#Text of train articles 
+article_contents = [i[0] for i in results]
+#label of train articles
+article_labels = [type_mapping(i[1]) for i in results]
 
 article_clf = Pipeline([
     ('tfidf', TfidfVectorizer()),
     ('clf', LinearSVC(random_state=0)), #maybe add more options here
 ])
 
-article_clf.fit(article_content, article_label)
+#This fits a model
+article_clf.fit(article_contents, article_labels)
 
+#Print prediction of test
 print(f"prediction :  {article_clf.predict([test_text])}")
 print(f"True value : {type_mapping(test_label)}")
