@@ -61,7 +61,7 @@ def type_mapping(type_id):
 
 conn, cursor = create_connection()
 
-# py2 / py3 compat
+# py2 / py3 compatibility
 try:
     # xrange is defined in py2 only
     xrange
