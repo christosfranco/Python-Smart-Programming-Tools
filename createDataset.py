@@ -175,7 +175,11 @@ else:
 #Split the dataset into train and test here
 # create training and testing vars
 #Stratify ensures equal distribution of fake/non-fake over test and train
-X_train, X_test, y_train, y_test = train_test_split(result_content, result_labels, test_size=0.4, stratify=result_labels)
+VALIDATION_SET, TEST_SET = 0.1, 0.25
+X_train, X_test, y_train, y_test = train_test_split(result_content, result_labels, test_size=TEST_SET, shuffle=True, stratify=result_labels)
+
+#X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=VALIDATION_SET, shuffle=False, stratify=y_train)
+
 
 print("Data split")
 print(len(X_train) , len(X_test), len(y_train),len(y_test))
@@ -190,6 +194,9 @@ print("Xtrain transformed")
 
 tfidfXTest = tfidf.transform(X_test)
 print("xtest transformed")
+
+# tfidfXVal = tfidf.transform(X_val)
+# print("xval transformed")
 
 fileXTrain = open('tfidfXTrain.p', 'wb')
 print("fileXTrain openened")
@@ -210,3 +217,13 @@ fileYTest = open('tfidfYTest.p', 'wb')
 print("fileYTest openened")
 pickle.dump(y_test, fileYTest, protocol=None)
 fileYTest.close()
+
+# fileXVal = open('tfidfXVal.p', 'wb')
+# print("fileXVal openened")
+# pickle.dump(tfidfXVal, fileXVal, protocol=None)
+# fileXVal.close()
+
+# fileYVal = open('tfidfYVal.p', 'wb')
+# print("fileYVal openened")
+# pickle.dump(y_Val, fileYVal, protocol=None)
+# fileYVal.close()
