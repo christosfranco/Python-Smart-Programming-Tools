@@ -59,7 +59,7 @@ print(f"Non-normalized Confusion Matrix: \n%s" % CM)
 print(f"normalized Confusion Matrix: \n%s" % NormalizedCM)
 #print(f"True value : {type_mapping(y_test)}")
 
-clf = KNeighborsClassifier(random_state=0)
+clf = KNeighborsClassifier(n_neighbors=5)
 
 modelSVC = clf.fit(tfidfXTrain,tfidfYTrain)
 
