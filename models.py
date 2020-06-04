@@ -32,51 +32,37 @@ tfidfYTest = pickle.load(fileYTest)
 
 print("data loaded")
 
+
+###LinearSVC######
 clf = LinearSVC(random_state=0)
-
 modelSVC = clf.fit(tfidfXTrain,tfidfYTrain)
-
 print("model fitted")
-
 predictionScore = modelSVC.score(tfidfXTest, tfidfYTest)
-
 predict = modelSVC.predict(tfidfXTest)
-
 print("predict calculated")
-
 CM = metrics.confusion_matrix(tfidfYTest,predict)
-
 NormalizedCM = CM.astype('float') / CM.sum(axis=1)[:, np.newaxis]
-
 print("CM created")
-
 #Print prediction of test
 print(f"prediction : ", predictionScore)
 print(f"Training Total: %s\n Non-Fake: %s\n Fake: %s" % (len(tfidfYTrain), tfidfYTrain.count(0), tfidfYTrain.count(1)))
 print(f"Test Total: %s\n Non-Fake: %s\n Fake: %s" % (len(tfidfYTest), tfidfYTest.count(0), tfidfYTest.count(1)))
-
 print(f"Non-normalized Confusion Matrix: \n%s" % CM)
 print(f"normalized Confusion Matrix: \n%s" % NormalizedCM)
 #print(f"True value : {type_mapping(y_test)}")
+###LinearSVC######
 
+
+###KNeighborsClassifier######
 clf = KNeighborsClassifier(n_neighbors=5)
-
 modelSVC = clf.fit(tfidfXTrain,tfidfYTrain)
-
 print("model fitted")
-
 predictionScore = modelSVC.score(tfidfXTest, tfidfYTest)
-
 predict = modelSVC.predict(tfidfXTest)
-
 print("predict calculated")
-
 CM = metrics.confusion_matrix(tfidfYTest,predict)
-
 NormalizedCM = CM.astype('float') / CM.sum(axis=1)[:, np.newaxis]
-
 print("CM created")
-
 #Print prediction of test
 print(f"prediction : ", predictionScore)
 print(f"Training Total: %s\n Non-Fake: %s\n Fake: %s" % (len(tfidfYTrain), tfidfYTrain.count(0), tfidfYTrain.count(1)))
@@ -84,5 +70,23 @@ print(f"Test Total: %s\n Non-Fake: %s\n Fake: %s" % (len(tfidfYTest), tfidfYTest
 
 print(f"Non-normalized Confusion Matrix: \n%s" % CM)
 print(f"normalized Confusion Matrix: \n%s" % NormalizedCM)
+###KNeighborsClassifier######
 
+
+###DecisionTreeClassifier######
 clf = DecisionTreeClassifier(random_state=0)
+decTree = clf.fit(tfidfXTrain,tfidfYTrain)
+print("model fitted")
+predictionScore = decTree.score(tfidfXTest, tfidfYTest)
+predict = decTree.predict(tfidfXTest)
+print("predict calculated")
+CM = metrics.confusion_matrix(tfidfYTest,predict)
+NormalizedCM = CM.astype('float') / CM.sum(axis=1)[:, np.newaxis]
+print("CM created")
+#Print prediction of test
+print(f"prediction : ", predictionScore)
+print(f"Training Total: %s\n Non-Fake: %s\n Fake: %s" % (len(tfidfYTrain), tfidfYTrain.count(0), tfidfYTrain.count(1)))
+print(f"Test Total: %s\n Non-Fake: %s\n Fake: %s" % (len(tfidfYTest), tfidfYTest.count(0), tfidfYTest.count(1)))
+print(f"Non-normalized Confusion Matrix: \n%s" % CM)
+print(f"normalized Confusion Matrix: \n%s" % NormalizedCM)
+###DecisionTreeClassifier######
