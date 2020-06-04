@@ -19,11 +19,11 @@ import sys
 
 import csv
 
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-from torch.utils.data import TensorDataset, DataLoader
+#import torch
+#import torch.nn as nn
+#import torch.nn.functional as F
+#import torch.optim as optim
+#from torch.utils.data import TensorDataset, DataLoader
 
 from gensim.utils import simple_preprocess
 from gensim.corpora import Dictionary
@@ -181,14 +181,10 @@ else:
 #print(len(result))
 #make list that contains all with the lesser quantity and equal/near equal amount from the opposite
 
-tokens = list()
-for text in result_content:
-  tokens.append(simple_preprocess(text))
-
 MAX_NUM_WORDS = 10000
 MAX_SEQUENCE_LENGTH = 1000
 
-dictionary = Dictionary(tokens)
+dictionary = Dictionary(result_content)
 dictionary.filter_extremes(no_below=0.05, no_above=0.95,
                            keep_n=MAX_NUM_WORDS-2)
 
