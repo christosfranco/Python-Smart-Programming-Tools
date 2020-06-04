@@ -14,6 +14,19 @@ from sklearn.svm import LinearSVC
 from sklearn.pipeline import Pipeline
 import random
 import pickle
+import os
+import sys
+
+import csv
+
+# import torch
+# import torch.nn as nn
+# import torch.nn.functional as F
+# import torch.optim as optim
+# from torch.utils.data import TensorDataset, DataLoader
+
+from gensim.utils import simple_preprocess
+from gensim.corpora import Dictionary
 
 #number of articles used in total from dataset
 ARTICLE_COUNT = 1000000
@@ -53,11 +66,9 @@ def type_mapping(type_id):
     10 | rumor
     11 | bias
     """
-    #reliable = [1] 
-    fake = [0,2,3,4,5,6,7,8,9,10,11]
+    #reliable = [1,3,4,7,8,10,11] 
+    fake = [0,2,5,6,9]
     return int(type_id in fake)
-
-
 
 conn, cursor = create_connection()
 
@@ -71,12 +82,13 @@ except NameError:
 
 cursor.execute("SELECT count(*) FROM article")
 count = cursor.fetchone()[0]
-batch_size = 100000 # whatever
+batch_size = 10000 # whatever
 
-article_contents = []
-article_labels = []
-# fake = np.array([[],[]])
-# real = np.array([[],[]])
+fake_labels = []
+real_labels = []
+fake_content = []
+real_content = []
+
 fakeCount = 0
 realCount = 0
 for offset in xrange(0, count, batch_size):
@@ -84,49 +96,30 @@ for offset in xrange(0, count, batch_size):
         "SELECT content, type_id FROM article WHERE type_id IS NOT NULL LIMIT %s OFFSET %s", (batch_size, offset))
     print(offset)
     for row in cursor:
-        # if type_mapping(row[1]):
-        #     np.concatenate(fake[0], row[0])
-        #     np.concatenate(fake[1],(type_mapping(row[1])))
-        #     fakeCount += 1
-        # else:
-        #     np.concatenate(real[0],row[0])
-        #     np.concatenate(real[1],(type_mapping(row[1])))
-        #     realCount += 1
-        article_contents.append(row[0])
-        article_labels.append(type_mapping(row[1]))
+        typ = type_mapping(row[1])
+        if (typ == 1):
+            fake_content.append(row[0])
+            fake_labels.append(typ)
+            fakeCount += 1
+        else:
+            real_content.append(row[0])
+            real_labels.append(typ)
+            realCount += 1
 
+print(f"real and fake divided")
 
 close_connection(conn, cursor)
-
 print("connection closed")
 
 #Make sure we have an equal distrituion of Fake and non-fake in article_labels
 #choose value that has the most quantity over label
 
-fake_labels = []
-real_labels = []
-fake_content = []
-real_content = []
-for i in range(len(article_labels)):
-    if article_labels[i] == 1:
-        fakeCount += 1
-        fake_labels.append(article_labels[i])
-        fake_content.append(article_contents[i])
-    else:
-        realCount += 1
-        real_labels.append(article_labels[i])
-        real_content.append(article_contents[i])
-
-print(f"real and fake divided")
-
 k = 0
-# population = np.array([[],[]])
-# result = np.array([[],[]])
 population = []
 result_labels = []
 result_content = []
 
-
+#make list that contains randomrows from the lesser type
 if fakeCount > realCount*1.02:
     Content = fake_content
     Labels = fake_labels
@@ -138,10 +131,6 @@ if fakeCount > realCount*1.02:
     
     result_labels = real_labels
     result_content = real_content
-
-    for i in randomRows:
-        result_labels.append(Labels[i])
-        result_content.append(Content[i])
 elif realCount > fakeCount*1.02:
     Content = real_content
     Labels = real_labels
@@ -153,86 +142,108 @@ elif realCount > fakeCount*1.02:
     
     result_labels = fake_labels
     result_content = fake_content
-
-    for i in randomRows:
-        result_labels.append(Labels[i])
-        result_content.append(Content[i])
-    # for i in randomRows:
-    #     np.concatenate(result,(population[i,:]))
-    # np.concatenate(result,lessAttribute)
 else:
     pass
 
+resultcount = 0
+#Append to result
+for i in randomRows:
+    resultcount += 1
+    result_labels.append(Labels[i])
+    result_content.append(Content[i])
+#reset arrays
+fake_labels = []
+real_labels = []
+fake_content = []
+real_content = []
+print(fake_labels)
 
-#print("fakecount: %i realcount %i lessAttribute %s" % (fakeCount, realCount, lessAttribute, ))
-#print(len(result))
-#make list that contains all with the lesser quantity and equal/near equal amount from the opposite
+print("fakecount: %i realcount %i resultcount: %i" % (fakeCount, realCount, resultcount))
 
-tokens = list()
-for text in result_content:
-  tokens.append(simple_preprocess(text))
+labels = open('labels.p', 'wb')
+print("labels openened")
+pickle.dump(result_labels, labels, protocol=None)
+labels.close()
 
-MAX_NUM_WORDS = 10000
-MAX_SEQUENCE_LENGTH = 1000
+content = open('content.p', 'wb')
+print("content openened")
+pickle.dump(result_content, content, protocol=None)
+content.close()
 
-dictionary = Dictionary(tokens)
-dictionary.filter_extremes(no_below=0.05, no_above=0.95,
-                           keep_n=MAX_NUM_WORDS-2)
+#Here do something with GENSIM TENSOR DATA
+# MAX_NUM_WORDS = 10000
+# MAX_SEQUENCE_LENGTH = 1000
 
-word_index = dictionary.token2id
-print('found %s unique tokens.' % len(word_index))
+# tokens = list()
+# dataArr = np.empty((9999,MAX_SEQUENCE_LENGTH),dtype=int)
+# #for offset in xrange(0, resultcount, batch_size):
+# #result_content[offset:offset+batch_size-1].copy()
+# for text in result_content:
+#     tokens.append(simple_preprocess(text))
 
-data = [dictonary.doc2idx(t) for t in tokens]
+# dictionary = Dictionary(tokens)
+# dictionary.filter_extremes(no_below=0.05, no_above=0.95,
+#                         keep_n=MAX_NUM_WORDS-2)
 
-#concatenate and pad sequences
-data = [i[MAX_SEQUENCE_LENGTH] for i in data]
-data = np.array([np.pad(i,(0, MAX_SEQUENCE_LENGTH-len(i)),
-                        mode='constant', constant_values=-2)
-                for i in data], dtype=int)
-data = data + 2
+# word_index = dictionary.token2id
+# print('found %s unique tokens.' % len(word_index))
 
-print('shape of data tensor ', data_shape)
-print('length of label vector ', len(result_labels))
+# data = [dictionary.doc2idx(t) for t in tokens]
+
+# #concatenate and pad sequences
+# data = [i[:MAX_SEQUENCE_LENGTH] for i in data]
+# data = np.array([np.pad(i,(0, MAX_SEQUENCE_LENGTH-len(i)), mode='constant', constant_values=-2) for i in data], dtype=int)
+# print('shape of conc', data.shape)
+# #print('shape of Arr', dataArr.shape)
+
+# #np.append(dataArr, data ,axis =0)
+# #dataArr = dataArr + 2
+# data = data + 2
+
+# print('shape of data tensor ', data.shape)
+# print('length of label vector ', len(result_labels))
 
 
 
-#Split the dataset into train and test here
-# create training and testing vars
-#Stratify ensures equal distribution of fake/non-fake over test and train
-VALIDATION_SET, TEST_SET = 0.1, 0.25
-X_train, X_test, y_train, y_test = train_test_split(data, result_labels, test_size=TEST_SET, shuffle=True, stratify=result_labels)
+# #Split the dataset into train and test here
+# # create training and testing vars
+# #Stratify ensures equal distribution of fake/non-fake over test and train
+# VALIDATION_SET, TEST_SET = 0.1, 0.25
+# X_Train, X_Test, y_train, y_test = train_test_split(data, result_labels, test_size=TEST_SET, shuffle=True, stratify=result_labels)
 
-X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=VALIDATION_SET, shuffle=False, stratify=y_train)
+# data = []
 
-print("Data split")
-print(len(X_train) , len(X_test), len(y_train),len(y_test))
+# X_Train, X_Val, y_train, y_Val = train_test_split(X_Train, y_train, test_size=VALIDATION_SET, shuffle=True, stratify=y_train)
 
-fileXTrain = open('XTrain.p', 'wb')
-print("fileXTrain openened")
-pickle.dump(X_Train, fileXTrain, protocol=None)
-fileXTrain.close()
+# print("Data split")
+# print(len(X_Train) , len(X_Test), len(y_train),len(y_test))
 
-fileYTrain = open('YTrain.p', 'wb')
-print("fileYTrain openened")
-pickle.dump(y_train, fileYTrain, protocol=None)
-fileYTrain.close()
+# fileXTrain = open('XTrain.p', 'wb')
+# print("fileXTrain openened")
+# pickle.dump(X_Train, fileXTrain, protocol=None)
+# fileXTrain.close()
 
-fileXTest = open('XTest.p', 'wb')
-print("fileXTest openened")
-pickle.dump(X_Test, fileXTest, protocol=None)
-fileXTest.close()
+# fileYTrain = open('YTrain.p', 'wb')
+# print("fileYTrain openened")
+# pickle.dump(y_train, fileYTrain, protocol=None)
+# fileYTrain.close()
 
-fileYTest = open('YTest.p', 'wb')
-print("fileYTest openened")
-pickle.dump(y_test, fileYTest, protocol=None)
-fileYTest.close()
+# fileXTest = open('XTest.p', 'wb')
+# print("fileXTest openened")
+# pickle.dump(X_Test, fileXTest, protocol=None)
+# fileXTest.close()
 
-fileXVal = open('XVal.p', 'wb')
-print("fileXVal openened")
-pickle.dump(X_Val, fileXVal, protocol=None)
-fileXVal.close()
+# fileYTest = open('YTest.p', 'wb')
+# print("fileYTest openened")
+# pickle.dump(y_test, fileYTest, protocol=None)
+# fileYTest.close()
 
-fileYVal = open('YVal.p', 'wb')
-print("fileYVal openened")
-pickle.dump(y_Val, fileYVal, protocol=None)
-fileYVal.close()
+# fileXVal = open('XVal.p', 'wb')
+# print("fileXVal openened")
+# pickle.dump(X_Val, fileXVal, protocol=None)
+# fileXVal.close()
+
+# fileYVal = open('YVal.p', 'wb')
+# print("fileYVal openened")
+# pickle.dump(y_Val, fileYVal, protocol=None)
+# fileYVal.close()

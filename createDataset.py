@@ -16,14 +16,7 @@ import random
 import pickle
 import os
 import sys
-
 import csv
-
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-from torch.utils.data import TensorDataset, DataLoader
 
 from gensim.utils import simple_preprocess
 from gensim.corpora import Dictionary
@@ -185,7 +178,7 @@ tokens = list()
 for text in result_content:
   tokens.append(simple_preprocess(text))
 
-MAX_NUM_WORDS = 10000
+MAX_NUM_WORDS = 1000
 MAX_SEQUENCE_LENGTH = 1000
 
 dictionary = Dictionary(tokens)
@@ -195,16 +188,16 @@ dictionary.filter_extremes(no_below=0.05, no_above=0.95,
 word_index = dictionary.token2id
 print('found %s unique tokens.' % len(word_index))
 
-data = [dictonary.doc2idx(t) for t in tokens]
+data = [dictionary.doc2idx(t) for t in tokens]
 
 #concatenate and pad sequences
-data = [i[MAX_SEQUENCE_LENGTH] for i in data]
+data = [i[:MAX_SEQUENCE_LENGTH] for i in data]
 data = np.array([np.pad(i,(0, MAX_SEQUENCE_LENGTH-len(i)),
                         mode='constant', constant_values=-2)
                 for i in data], dtype=int)
 data = data + 2
 
-print('shape of data tensor ', data_shape)
+print('shape of data tensor ', data.shape)
 print('length of label vector ', len(result_labels))
 
 
