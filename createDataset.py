@@ -14,6 +14,19 @@ from sklearn.svm import LinearSVC
 from sklearn.pipeline import Pipeline
 import random
 import pickle
+import os
+import sys
+
+import csv
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+from torch.utils.data import TensorDataset, DataLoader
+
+from gensim.utils import simple_preprocess
+from gensim.corpora import Dictionary
 
 #number of articles used in total from dataset
 ARTICLE_COUNT = 1000000
@@ -200,7 +213,7 @@ print('length of label vector ', len(result_labels))
 # create training and testing vars
 #Stratify ensures equal distribution of fake/non-fake over test and train
 VALIDATION_SET, TEST_SET = 0.1, 0.25
-X_train, X_test, y_train, y_test = train_test_split(result_content, result_labels, test_size=TEST_SET, shuffle=True, stratify=result_labels)
+X_train, X_test, y_train, y_test = train_test_split(data, result_labels, test_size=TEST_SET, shuffle=True, stratify=result_labels)
 
 #X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=VALIDATION_SET, shuffle=False, stratify=y_train)
 
