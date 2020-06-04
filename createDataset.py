@@ -53,8 +53,8 @@ def type_mapping(type_id):
     10 | rumor
     11 | bias
     """
-    #reliable = [1] 
-    fake = [0,2,3,4,5,6,7,8,9,10,11]
+    #reliable = [1,3,4,7,8,10,11] 
+    fake = [0,2,5,6,9]
     return int(type_id in fake)
 
 
@@ -168,7 +168,31 @@ else:
 #print(len(result))
 #make list that contains all with the lesser quantity and equal/near equal amount from the opposite
 
+tokens = list()
+for text in result_content:
+  tokens.append(simple_preprocess(text))
 
+MAX_NUM_WORDS = 10000
+MAX_SEQUENCE_LENGTH = 1000
+
+dictionary = Dictionary(tokens)
+dictionary.filter_extremes(no_below=0.05, no_above=0.95,
+                           keep_n=MAX_NUM_WORDS-2)
+
+word_index = dictionary.token2id
+print('found %s unique tokens.' % len(word_index))
+
+data = [dictonary.doc2idx(t) for t in tokens]
+
+#concatenate and pad sequences
+data = [i[MAX_SEQUENCE_LENGTH] for i in data]
+data = np.array([np.pad(i,(0, MAX_SEQUENCE_LENGTH-len(i)),
+                        mode='constant', constant_values=-2)
+                for i in data], dtype=int)
+data = data + 2
+
+print('shape of data tensor ', data_shape)
+print('length of label vector ', len(result_labels))
 
 
 
