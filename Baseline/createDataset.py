@@ -108,17 +108,6 @@ print("connection closed")
 #Make sure we have an equal distrituion of Fake and non-fake in article_labels
 #choose value that has the most quantity over label
 
-
-for i in range(len(article_labels)):
-    if article_labels[i] == 1:
-        fakeCount += 1
-        fake_labels.append(article_labels[i])
-        fake_content.append(article_contents[i])
-    else:
-        realCount += 1
-        real_labels.append(article_labels[i])
-        real_content.append(article_contents[i])
-
 print(f"real and fake divided")
 
 k = 0
