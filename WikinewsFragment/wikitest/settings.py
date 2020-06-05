@@ -14,8 +14,8 @@ FEED_URI="wiki.csv"
 
 BOT_NAME = 'wiki'
 
-SPIDER_MODULES = ['wikitest.spiders']
-NEWSPIDER_MODULE = 'wikitest.spiders'
+SPIDER_MODULES = ['wiki.spiders']
+NEWSPIDER_MODULE = 'wiki.spiders'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
