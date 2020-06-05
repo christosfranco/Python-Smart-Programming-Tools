@@ -1,0 +1,27 @@
+# Task 5 - Creation of our own news data set by scraping it from the web.
+
+We will be looking at the "Politics and Conflict" section of the Wikinews site (https://en.wikinews.org/wiki/Category:Politics_and_conflicts), which contains about 7500 articles sorted by the first letter in their title. Since we want the different groups to have slightly different experiences with this data, each group should try to extract the articles for a specific range of letters - given by the python expression: 
+
+"ABCDEFGHIJKLMNOPRSTUVWZABCDEFGHIJKLMNOPRSTUVWZ"[group_nr%23:group_nr%23+10]
+
+where group_nr is your group number (according to Task 1). 
+
+The data set you produce should contain fields corresponding to the content of the article, in addition to some metadata fields like the date when the article was written. Describe the tools you used, and any challenges that you faced, and report some basic statistics on the data (e.g. number of rows, fields, etc). Note that there are no fake/no-fake labels in this dataset - we will consider it as a trusted source of only true articles (which is perhaps a bit naive).
+
+
+
+
+## Difficulties in constructing the spider:
+Started with the approach of using all the start urls on the form of.
+"https://en.wikinews.org/w/index.php?title=Category:Politics_and_conflicts&from=<letter>"
+    Where letter is [D-N]. Downside of this was that not all articles was on their start letter page. So some F articles was on another page and was thus not included. Furthermore we got some articles from other letters we solving this by checking for WantedArticles = r"/wiki/[D-N]".
+
+The next approach was to yield the parse() on itself when going to next page and starting on our D page. The spider would thus crawl until it reached a nextpage with a url with the letter O (The letter after N). 
+
+There was generally a difficulty with parsing on multiple levels. But visualizing it as a spider crawling through a net helped on this part. So the spider would start on a node in the web corresponding to our start_urls. This node would then be connected to all the articles' nodes in the start_urls. All these article nodes would then be connected to strings yielding all the subparts of the articles that we would want to extract. When done extracting the spider would crawl back through the web to the next article and repeat until all articles was done. After it would then crawl to the nextpage, given the conditions to be true, and repeat until it could no longer crawl to a next page.
+
+If you would want to extract articles in range over the start of the alphabeth, eg. [S-Z,A-B], you would want two starturls on S and A. And as a restriction on the nextpage you would have C. Reasoning that no restriction is required after Z is that no nextpage exists on Z and the condition would therefore be False.
+
+Extracting the specific information from each article was a bit of a hassle. Some articles' content are structered in tables while over 90% have their content in paragraphs. We did not end up extracting all the content from these types of articles. Likewise with the source, sometimes it we were unable to destinquish this from the content as they were in the same structure.
+
+We have 29824 lines of data. We have 2747 articles, approximating to about 1/3 of the total articles, with four fields each. These are title, date, source, and text (content). Some articles have some empty fields due to the reasons descripted above.

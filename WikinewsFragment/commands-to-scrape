@@ -1,0 +1,8 @@
+#!/bin/bash
+
+echo resetting .csv file
+rm -f ./WikinewsScraping/wiki.csv
+echo scraping
+cd ./WikinewsScraping
+scrapy crawl wiki -L WARNING
+echo DONE
