@@ -3,6 +3,10 @@ import re
 import datetime 
 
 scrapped_at = datetime.datetime.now()
+domain = "en.wikinews.org"
+url_domain = "https://" + domain
+url_link = ""
+article_id = 0
 
 class testSpider(scrapy.Spider):
     name = "wiki"
@@ -11,7 +15,6 @@ class testSpider(scrapy.Spider):
         start_urls = [
             "https://en.wikinews.org/w/index.php?title=Category:Politics_and_conflicts&from=D",
         ]
-
 
         #yield all the article links from the start urls
         for url in start_urls:
@@ -23,10 +26,13 @@ class testSpider(scrapy.Spider):
     #Might also find some categories that should not be processed --- Fixed no longer applicable
     def parse(self, response):    
         links = response.xpath('/html/body/div[3]/div[3]/div[4]/div[2]/div[2]/div/div/div/ul/li/a/@href').extract()
-        WantedArticles = r"/wiki/[D-N]"
-        #links = response.css('div.mw-category-group ul li').xpath('a/@href').extract()
+        WantedArticles = r"/wiki/[D-N]" 
+
+        global url_link
+
         for link in links:
             if link and (re.match(WantedArticles , link ) != None):
+                url_link = url_domain + link
                 yield response.follow(url = link, callback = self.parse2)
 
         #Change the last in the string to the last letter
@@ -40,30 +46,46 @@ class testSpider(scrapy.Spider):
             #print("Found url: {}".format(nextpageurl)) # Write a debug statement
             yield scrapy.Request(nextpageurl, callback=self.parse) # Return a call to the function "parse"
 
+
     #Will run over all individual articles and extract appropriate data
     def parse2(self, response): #return individual article
         
         title = response.xpath('/html/body/div[3]/h1/text()').get()
         
         source = response.xpath('/html/body/div[3]/div[3]/div[4]/div/ul/li/span/descendant-or-self::text()').extract()
-        
-        text = response.xpath("""/html/body/div[3]/div[3]/div[4]/div/p/descendant-or-self::text()[not( parent::strong | ancestor::i)]""").extract()
+        source = ''.join(source)
 
+        content = response.xpath("""/html/body/div[3]/div[3]/div[4]/div/p/descendant-or-self::text()[not( parent::strong | ancestor::i)]""").extract()
+        content = ''.join(content)
+
+        # Keywords and date
         keywords = response.xpath("""//div[contains(@class, 'mw-normal-catlinks')]/ul/descendant-or-self::text()""").extract()
+        finalkeywords = '[\"'
+        article_date = ""
+        date_index = 0
+        date_regex_pattern = r"(?:january|february|march|april|may|june|july|august|september|october|november|december)(?: )(?:[\d]{1}|[\d]{2})(?:, )(?:1\d{3}|2\d{3})"
+        for i in range(len(keywords)):
+            keyword = keywords[i].lower()
+            if(re.fullmatch(date_regex_pattern, keyword) != None):
+                date_index = i
+            else:  
+                finalkeywords += (keyword + '\", \"')   
+        article_date = keywords[date_index]        
+        keywords.pop(date_index)
+        finalkeywords = finalkeywords[:-3] + ']'
 
-        article_date = keywords[0] #The date at which the article was updated last
-
-        keywords.pop(0)
-
-        finaltext = ''.join(text)
-
-        finalsource = ''.join(source)
+        global article_id 
 
         yield {
+            'article_id'   : article_id,
             'title'        : title,
-            'source'       : finalsource,
+            'source'       : source,
             'scrapped_at'  : scrapped_at,
-            'text'         : finaltext,
-            'keywords'     : keywords,
+            'content'      : content,
+            'keywords'     : finalkeywords,
             'article_date' : article_date,
+            'domain'       : domain,
+            'url'          : url_link,
         }
+
+        article_id += 1
