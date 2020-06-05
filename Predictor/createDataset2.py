@@ -66,8 +66,8 @@ def type_mapping(type_id):
     10 | rumor
     11 | bias
     """
-    #reliable = [1,3,4,7,8,10,11] 
-    fake = [0,2,5,6,9]
+    #reliable = [1,3,8] 
+    fake = [0,2,5,6,4,7,9,10,11]
     return int(type_id in fake)
 
 conn, cursor = create_connection()
