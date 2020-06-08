@@ -2,10 +2,9 @@ import scrapy
 import re
 import datetime 
 
-scrapped_at = datetime.datetime.now()
+scraped_at = datetime.datetime.now()
 domain = "en.wikinews.org"
-url_domain = "https://" + domain
-url_link = ""
+typ = "reliable"
 article_id = 0
 
 class testSpider(scrapy.Spider):
@@ -28,18 +27,15 @@ class testSpider(scrapy.Spider):
         links = response.xpath('/html/body/div[3]/div[3]/div[4]/div[2]/div[2]/div/div/div/ul/li/a/@href').extract()
         WantedArticles = r"/wiki/[D-N]" 
 
-        global url_link
-
         for link in links:
             if link and (re.match(WantedArticles , link ) != None):
-                url_link = url_domain + link
                 yield response.follow(url = link, callback = self.parse2)
 
         #Change the last in the string to the last letter
         forbiddenNextPage =  r"https:\/\/en\.wikinews\.org\/w\/index\.php\?title=Category:Politics_and_conflicts&pagefrom=O"
         #This has to be get() instead of extract so that forbiddenNextPage in nextpageurl can be compared as strings
-        nextpageurl1 = response.xpath("//*[@id='mw-pages']/a[contains(.,'next page')]/@href").get()
-        nextpageurl = response.urljoin(nextpageurl1)
+        nextpageurl = response.xpath("//*[@id='mw-pages']/a[contains(.,'next page')]/@href").get()
+        nextpageurl = response.urljoin(nextpageurl)
 
         if nextpageurl and (re.match(forbiddenNextPage , nextpageurl ) == None):
             # If we've found a pattern which matches
@@ -52,40 +48,63 @@ class testSpider(scrapy.Spider):
         
         title = response.xpath('/html/body/div[3]/h1/text()').get()
         
-        source = response.xpath('/html/body/div[3]/div[3]/div[4]/div/ul/li/span/descendant-or-self::text()').extract()
-        source = ''.join(source)
 
         content = response.xpath("""/html/body/div[3]/div[3]/div[4]/div/p/descendant-or-self::text()[not( parent::strong | ancestor::i)]""").extract()
         content = ''.join(content)
 
+        url = response.url
+
         # Keywords and date
         keywords = response.xpath("""//div[contains(@class, 'mw-normal-catlinks')]/ul/descendant-or-self::text()""").extract()
         finalkeywords = '[\"'
-        article_date = ""
+        written_at = ""
         date_index = 0
-        date_regex_pattern = r"(?:january|february|march|april|may|june|july|august|september|october|november|december)(?: )(?:[\d]{1}|[\d]{2})(?:, )(?:1\d{3}|2\d{3})"
+        dateRegexPattern = r"(?:january|february|march|april|may|june|july|august|september|october|november|december)(?: )(?:[\d]{1}|[\d]{2})(?:, )(?:1\d{3}|2\d{3})"
         for i in range(len(keywords)):
             keyword = keywords[i].lower()
-            if(re.fullmatch(date_regex_pattern, keyword) != None):
+            if(re.fullmatch(dateRegexPattern, keyword) != None):
                 date_index = i
             else:  
                 finalkeywords += (keyword + '\", \"')   
-        article_date = keywords[date_index]        
+        written_at = keywords[date_index]        
         keywords.pop(date_index)
-        finalkeywords = finalkeywords[:-3] + ']'
+        if len(finalkeywords) < 3:
+            finalkeywords = ''
+        else:     
+            finalkeywords = finalkeywords[:-3] + ']'
+
+        # Sources
+        sources = []
+        sourcesFromTemplate = response.xpath("""//a[contains(@class, 'external text')]/@href""")
+        for li in sourcesFromTemplate:
+            temp = li.get().lower()
+            sources.append(temp)
+            
+        finalsources = '[\"'
+        
+        for i in range(len(sources)):
+            source = sources[i].lower()
+            finalsources += (source + '\", \"')
+        
+        if len(finalsources) < 3:
+            finalsources = ''
+        else:
+            finalsources = finalsources[:-3] + ']'            
+
 
         global article_id 
 
         yield {
             'article_id'   : article_id,
             'title'        : title,
-            'source'       : source,
-            'scrapped_at'  : scrapped_at,
+            'sources'      : finalsources,
+            'scraped_at'   : scraped_at,
             'content'      : content,
             'keywords'     : finalkeywords,
-            'article_date' : article_date,
+            'written_at'   : written_at,
             'domain'       : domain,
-            'url'          : url_link,
+            'url'          : url,
+            'type'         : typ,
         }
 
         article_id += 1
