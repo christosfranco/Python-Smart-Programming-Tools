@@ -53,21 +53,25 @@ def close_connection(conn, cursor):
 
 def type_mapping(type_id):
     """
-    0  | junkscience
-    1  | reliable
-    2  | hate
-    3  | political
-    4  | clickbait
-    5  | unknown
-    6  | fake
-    7  | conspiracy
-    8  | satire
-    9  | unreliable
-    10 | rumor
-    11 | bias
+     type_id | type_name  
+---------+------------
+       0 | rumor
+       1 | hate
+       2 | unreliable
+       3 | conspiracy
+       4 | clickbait
+       5 | satire
+       6 | fake
+       7 | reliable
+       8 | bias
+       9 | political
+      10 | junksci
+      11 | unknown
+(12 rows)
+
     """
-    #reliable = [1,3,4,7,8,10,11] 
-    fake = [0,2,5,6,9]
+    #reliable = [7,9] 
+    fake = [0,2,3,5,6,4,7,9,10,11]
     return int(type_id in fake)
 
 conn, cursor = create_connection()
