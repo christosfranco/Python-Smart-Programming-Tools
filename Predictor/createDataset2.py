@@ -70,8 +70,10 @@ def type_mapping(type_id):
 (12 rows)
 
     """
+
     #reliable = [7,9] 
-    fake = [0,2,3,5,6,4,7,9,10,11]
+    fake = [0,1,2,3,5,6,4,8,10,11]
+
     return int(type_id in fake)
 
 conn, cursor = create_connection()

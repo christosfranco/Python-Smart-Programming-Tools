@@ -59,8 +59,8 @@ def type_mapping(type_id):
     10 | rumor
     11 | bias
     """
-    #reliable = [1,3,4,7,8,10,11] 
-    fake = [0,2,5,6,9]
+    #reliable = [1,3,8] 
+    fake = [0,2,5,6,4,7,9,10,11]
     return int(type_id in fake)
 
 
@@ -79,10 +79,10 @@ cursor.execute("SELECT count(*) FROM article")
 count = cursor.fetchone()[0]
 batch_size = 100000 # whatever
 
-article_contents = []
-article_labels = []
-# fake = np.array([[],[]])
-# real = np.array([[],[]])
+fake_labels = []
+real_labels = []
+fake_content = []
+real_content = []
 fakeCount = 0
 realCount = 0
 for offset in xrange(0, count, batch_size):
@@ -90,16 +90,15 @@ for offset in xrange(0, count, batch_size):
         "SELECT content, type_id FROM article WHERE type_id IS NOT NULL LIMIT %s OFFSET %s", (batch_size, offset))
     print(offset)
     for row in cursor:
-        # if type_mapping(row[1]):
-        #     np.concatenate(fake[0], row[0])
-        #     np.concatenate(fake[1],(type_mapping(row[1])))
-        #     fakeCount += 1
-        # else:
-        #     np.concatenate(real[0],row[0])
-        #     np.concatenate(real[1],(type_mapping(row[1])))
-        #     realCount += 1
-        article_contents.append(row[0])
-        article_labels.append(type_mapping(row[1]))
+        typ = type_mapping(row[1])
+        if (typ == 1):
+            fake_content.append(row[0])
+            fake_labels.append(typ)
+            fakeCount += 1
+        else:
+            real_content.append(row[0])
+            real_labels.append(typ)
+            realCount += 1
 
 
 close_connection(conn, cursor)
@@ -109,25 +108,9 @@ print("connection closed")
 #Make sure we have an equal distrituion of Fake and non-fake in article_labels
 #choose value that has the most quantity over label
 
-fake_labels = []
-real_labels = []
-fake_content = []
-real_content = []
-for i in range(len(article_labels)):
-    if article_labels[i] == 1:
-        fakeCount += 1
-        fake_labels.append(article_labels[i])
-        fake_content.append(article_contents[i])
-    else:
-        realCount += 1
-        real_labels.append(article_labels[i])
-        real_content.append(article_contents[i])
-
 print(f"real and fake divided")
 
 k = 0
-# population = np.array([[],[]])
-# result = np.array([[],[]])
 population = []
 result_labels = []
 result_content = []
@@ -163,17 +146,14 @@ elif realCount > fakeCount*1.02:
     for i in randomRows:
         result_labels.append(Labels[i])
         result_content.append(Content[i])
-    # for i in randomRows:
-    #     np.concatenate(result,(population[i,:]))
-    # np.concatenate(result,lessAttribute)
 else:
     pass
 
-
-#print("fakecount: %i realcount %i lessAttribute %s" % (fakeCount, realCount, lessAttribute, ))
-#print(len(result))
-#make list that contains all with the lesser quantity and equal/near equal amount from the opposite
-
+fake_labels = []
+real_labels = []
+fake_content = []
+real_content = []
+print("fakecount: %i realcount %i resultcount: %i" % (fakeCount, realCount, resultcount))
 
 #Split the dataset into train and test here
 # create training and testing vars
@@ -181,6 +161,8 @@ else:
 VALIDATION_SET, TEST_SET = 0.1, 0.25
 X_train, X_test, y_train, y_test = train_test_split(result_content, result_labels, test_size=TEST_SET, shuffle=True, stratify=result_labels)
 
+result_labels = []
+result_content = []
 #X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=VALIDATION_SET, shuffle=False, stratify=y_train)
 
 
