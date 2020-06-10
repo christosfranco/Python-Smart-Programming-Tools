@@ -24,7 +24,7 @@ from nltk.corpus import stopwords
 
 
 # Sample
-csv_in = './../WikinewsScraping/wiki.csv'
+csv_in = '/home/marcus/Desktop/Studie/Data Science/Project_Data_Science/WikinewsFragment/WikinewsScraping/wiki.csv'
 
 
 def create_empty_file_for_writing(filename):
@@ -135,7 +135,7 @@ def extract_and_put_in_csv_files(chunk):
         scraped_at_time_id = 0
         scraped_at = row['scraped_at']
         if(isNaN(scraped_at)):
-            scraped_at = dtime.datetime(1000, 1, 1)
+            scraped_at = pd.Timestamp.min
         if (scraped_at not in time_dictionary):
             time_dictionary[scraped_at] = ID_time
             scraped_at_time_id = ID_time
@@ -148,7 +148,7 @@ def extract_and_put_in_csv_files(chunk):
         if(not isNaN(written_at) and written_at != 'Published'):
             written_at = datetime.strptime(written_at, '%B %d, %Y')     
         else:    
-            written_at = dtime.datetime(1000, 1, 1)
+            written_at = pd.Timestamp.min
 
         if (written_at not in time_dictionary):
             time_dictionary[written_at] = ID_time
@@ -199,20 +199,20 @@ def extract_and_put_in_csv_files(chunk):
         ID_article += 1
 
 
-csv_source     = create_empty_file_for_writing('csv-files/source.csv')
-csv_references = create_empty_file_for_writing('csv-files/references.csv')
+csv_source     = create_empty_file_for_writing('/home/marcus/Desktop/Studie/Data Science/Project_Data_Science/WikinewsFragment/CreateAndPopulateWikinewsDatabase/csv-files/source.csv')
+csv_references = create_empty_file_for_writing('/home/marcus/Desktop/Studie/Data Science/Project_Data_Science/WikinewsFragment/CreateAndPopulateWikinewsDatabase/csv-files/references.csv')
 
-csv_keyword    = create_empty_file_for_writing('csv-files/keyword.csv')
-csv_tags       = create_empty_file_for_writing('csv-files/tags.csv')
+csv_keyword    = create_empty_file_for_writing('/home/marcus/Desktop/Studie/Data Science/Project_Data_Science/WikinewsFragment/CreateAndPopulateWikinewsDatabase/csv-files/keyword.csv')
+csv_tags       = create_empty_file_for_writing('/home/marcus/Desktop/Studie/Data Science/Project_Data_Science/WikinewsFragment/CreateAndPopulateWikinewsDatabase/csv-files/tags.csv')
 
-csv_domain     = create_empty_file_for_writing('csv-files/domain.csv')
-csv_webpage    = create_empty_file_for_writing('csv-files/webpage.csv')
+csv_domain     = create_empty_file_for_writing('/home/marcus/Desktop/Studie/Data Science/Project_Data_Science/WikinewsFragment/CreateAndPopulateWikinewsDatabase/csv-files/domain.csv')
+csv_webpage    = create_empty_file_for_writing('/home/marcus/Desktop/Studie/Data Science/Project_Data_Science/WikinewsFragment/CreateAndPopulateWikinewsDatabase/csv-files/webpage.csv')
 
-csv_time       = create_empty_file_for_writing('csv-files/time.csv')
+csv_time       = create_empty_file_for_writing('/home/marcus/Desktop/Studie/Data Science/Project_Data_Science/WikinewsFragment/CreateAndPopulateWikinewsDatabase/csv-files/time.csv')
 
-csv_type       = create_empty_file_for_writing('csv-files/type.csv')
+csv_type       = create_empty_file_for_writing('/home/marcus/Desktop/Studie/Data Science/Project_Data_Science/WikinewsFragment/CreateAndPopulateWikinewsDatabase/csv-files/type.csv')
 
-csv_article    = create_empty_file_for_writing('csv-files/article.csv')
+csv_article    = create_empty_file_for_writing('/home/marcus/Desktop/Studie/Data Science/Project_Data_Science/WikinewsFragment/CreateAndPopulateWikinewsDatabase/csv-files/article.csv')
 
 # Initialize the dictionaries
 source_dictionary  = dict()
@@ -237,9 +237,9 @@ with open(csv_in, 'r', newline='',encoding='utf-8', errors='replace') as csvfile
         print(str(CHUNK_SIZE * chunk_idx) + " rows have been read.")
         chunk_idx += 1
     
-    simple_entity_to_CSV("csv-files/source.csv", "source_id", "source", source_dictionary)
-    simple_entity_to_CSV("csv-files/keyword.csv", "keyword_id", "keyword_name", keyword_dictionary)
-    simple_entity_to_CSV("csv-files/domain.csv", "domain_id", "domain_url", domain_dictionary)    
-    simple_entity_to_CSV("csv-files/type.csv", "type_id", "type_name", type_dictionary)
-    simple_entity_to_CSV("csv-files/time.csv", "time_id", "time", time_dictionary)
+    simple_entity_to_CSV("/home/marcus/Desktop/Studie/Data Science/Project_Data_Science/WikinewsFragment/CreateAndPopulateWikinewsDatabase/csv-files/source.csv", "source_id", "source", source_dictionary)
+    simple_entity_to_CSV("/home/marcus/Desktop/Studie/Data Science/Project_Data_Science/WikinewsFragment/CreateAndPopulateWikinewsDatabase/csv-files/keyword.csv", "keyword_id", "keyword_name", keyword_dictionary)
+    simple_entity_to_CSV("/home/marcus/Desktop/Studie/Data Science/Project_Data_Science/WikinewsFragment/CreateAndPopulateWikinewsDatabase/csv-files/domain.csv", "domain_id", "domain_url", domain_dictionary)    
+    simple_entity_to_CSV("/home/marcus/Desktop/Studie/Data Science/Project_Data_Science/WikinewsFragment/CreateAndPopulateWikinewsDatabase/csv-files/type.csv", "type_id", "type_name", type_dictionary)
+    simple_entity_to_CSV("/home/marcus/Desktop/Studie/Data Science/Project_Data_Science/WikinewsFragment/CreateAndPopulateWikinewsDatabase/csv-files/time.csv", "time_id", "time", time_dictionary)
 csvfile.close()

@@ -1,0 +1,75 @@
+sudo -u postgres psql
+
+CREATE DATABASE fakenewsproject;
+
+CREATE USER user123 WITH ENCRYPTED PASSWORD 'pass123';
+
+GRANT ALL PRIVILEGES ON DATABASE fakenewsproject TO user123;
+
+GRANT pg_read_server_files TO user123;
+
+\c fakenewsproject
+
+CREATE SCHEMA fakenewscorpus;
+GRANT USAGE ON SCHEMA fakenewscorpus TO user123;
+GRANT CREATE ON SCHEMA fakenewscorpus TO user123;
+
+CREATE SCHEMA wikinewsfragment;
+GRANT USAGE ON SCHEMA wikinewsfragment TO user123;
+GRANT CREATE ON SCHEMA wikinewsfragment TO user123;
+
+
+### VIEW:
+
+CREATE VIEW integrateFakenewsSources
+AS
+  (SELECT title,
+          type_name,
+          content,
+          url,
+          domain_url
+   FROM   wikinewsfragment.article
+          natural JOIN wikinewsfragment.typ
+          natural JOIN wikinewsfragment.webpage
+          natural JOIN wikinewsfragment.domain)
+  UNION ALL
+  (SELECT title,
+          type_name,
+          content,
+          url,
+          domain_url
+   FROM   fakenewscorpus.article
+          natural JOIN fakenewscorpus.typ
+          natural JOIN fakenewscorpus.webpage
+          natural JOIN fakenewscorpus.domain); 
+
+
+
+
+
+### Nunber of articles with no keywords:
+
+SELECT Count(*) 
+FROM   (SELECT article_id 
+        FROM   fakenewscorpus.article 
+        EXCEPT 
+        SELECT article_id 
+        FROM   fakenewscorpus.tags) AS article_ids_with_no_keywords;
+
+
+SELECT Count(*) 
+FROM   (SELECT * 
+        FROM   fakenewscorpus.article 
+               LEFT JOIN fakenewscorpus.tags 
+                      ON article.article_id = tags.article_id 
+        EXCEPT 
+        SELECT * 
+        FROM   fakenewscorpus.article 
+               RIGHT JOIN fakenewscorpus.tags 
+                       ON article.article_id = tags.article_id) AS 
+       article_ids_with_no_keywords;
+
+
+### Baseline:
+
+Can use title or keywords as baseline. 
